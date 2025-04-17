@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+    <a href="index.html">← Back to Home</a>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background-color: #f4f4f4;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    #game {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 10px;
+      margin: 20px auto;
+      width: max-content;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      border: 2px solid #333;
+      cursor: pointer;
+    }
+
+    .cell.taken {
+      cursor: not-allowed;
+    }
+
+    #status {
+      font-size: 1.2rem;
+      margin-top: 10px;
+    }
+
+    #scoreboard {
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      font-size: 1rem;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe</h1>
+  <div id="game"></div>
+  <div id="status">Your turn!</div>
+  <div id="scoreboard">You: 0 | Computer: 0</div>
+  <button onclick="resetGame()">Play Again</button>
+
+  <script>
+    const gameBoard = document.getElementById("game");
+    const statusDiv = document.getElementById("status");
+    const scoreboardDiv = document.getElementById("scoreboard");
+
+    let board = ["", "", "", "", "", "", "", "", ""];
+    let gameOver = false;
+    let playerWins = 0;
+    let computerWins = 0;
+
+    const winPatterns = [
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6]
+    ];
+
+    function renderBoard() {
+      gameBoard.innerHTML = "";
+      board.forEach((val, i) => {
+        const cell = document.createElement("div");
+        cell.className = "cell";
+        cell.textContent = val;
+        if (val) cell.classList.add("taken");
+        cell.addEventListener("click", () => handlePlayerMove(i));
+        gameBoard.appendChild(cell);
+      });
+    }
+
+    function handlePlayerMove(index) {
+      if (board[index] || gameOver) return;
+      board[index] = "X";
+      console.log("Player selected:", index);
+      renderBoard();
+      if (checkWinner("X")) return;
+
+      if (!gameOver) {
+        setTimeout(() => {
+          computerMove();
+          renderBoard();
+          checkWinner("O");
+        }, 500);
+      }
+    }
+
+    function computerMove() {
+      const emptyIndices = board
+        .map((val, i) => (val === "" ? i : null))
+        .filter(i => i !== null);
+
+      if (emptyIndices.length === 0) return;
+
+      const move = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+      board[move] = "O";
+      console.log("Computer selected:", move);
+    }
+
+    function checkWinner(player) {
+      for (const pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] === player && board[b] === player && board[c] === player) {
+          gameOver = true;
+          highlightWinner(pattern);
+          if (player === "X") {
+            playerWins++;
+            statusDiv.textContent = "You win this round!";
+          } else {
+            computerWins++;
+            statusDiv.textContent = "Computer wins this round!";
+          }
+          updateScoreboard();
+          checkMatchWinner();
+          return true;
+        }
+      }
+
+      if (!board.includes("")) {
+        gameOver = true;
+        statusDiv.textContent = "It's a tie!";
+        return true;
+      }
+
+      return false;
+    }
+
+    function highlightWinner(pattern) {
+      pattern.forEach(i => {
+        gameBoard.children[i].style.backgroundColor = "#d4edda";
+      });
+    }
+
+    function updateScoreboard() {
+      scoreboardDiv.textContent = `You: ${playerWins} | Computer: ${computerWins}`;
+    }
+
+    function checkMatchWinner() {
+      if (playerWins >= 5) {
+        statusDiv.textContent = "🎉 You win the match! 🎉";
+        disableBoard();
+      } else if (computerWins >= 5) {
+        statusDiv.textContent = "💀 Computer wins the match!";
+        disableBoard();
+      }
+    }
+
+    function disableBoard() {
+      gameOver = true;
+      for (let i = 0; i < gameBoard.children.length; i++) {
+        gameBoard.children[i].classList.add("taken");
+      }
+    }
+
+    function resetGame() {
+      if (playerWins >= 5 || computerWins >= 5) {
+        playerWins = 0;
+        computerWins = 0;
+        updateScoreboard();
+      }
+      board = ["", "", "", "", "", "", "", "", ""];
+      gameOver = false;
+      statusDiv.textContent = "Your turn!";
+      renderBoard();
+    }
+
+    renderBoard();
+  </script>
+</body>
+</html>
